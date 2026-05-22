@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -22,7 +23,10 @@ public class HelloController {
     }
 
     @GetMapping("/api/users")
-    public List<User> users() {
+    public List<User> users(@RequestParam(required = false) String search) {
+        if (search != null && !search.trim().isEmpty()) {
+            return userRepository.findByNameContainingIgnoreCase(search.trim());
+        }
         return userRepository.findAll();
     }
 }

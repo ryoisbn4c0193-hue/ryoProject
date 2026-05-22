@@ -1,17 +1,17 @@
 # ryoProject
 
-This workspace contains a Java Spring Boot backend and a React frontend (Vite).
+このワークスペースは Java Spring Boot バックエンドと React (Vite) フロントエンドを含んでいます。
 
-Quick start
+## 起動手順
 
-- Backend: build and run with Maven
+### バックエンドのみ
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-- Frontend: install and start dev server
+### フロントエンドのみ
 
 ```bash
 cd frontend
@@ -19,81 +19,121 @@ npm install
 npm run dev
 ```
 
-The frontend calls the backend API at `/api/hello` (proxying via same host during development).
+起動すると `http://localhost:5173` でアクセス可能です。
 
-Application startup
+**フロントエンドの特徴:**
+- **Material UI (MUI)** コンポーネントベースで、モダンな UI を実装
+- 依存パッケージ: `@mui/material`, `@emotion/react`, `@emotion/styled`, `@fontsource/roboto`
+- **2 つのタブ機能:**
+  - **ホーム**: バックエンド API (`/api/hello`) と連携し、メッセージを取得・表示
+  - **ユーザー一覧**: ユーザーテーブルを検索・表示（Material UI テーブルコンポーネント使用）
+- ユーザー一覧では、ユーザー名で検索・絞り込み可能
 
-Backend only:
+### フルローカル開発
 
 ```bash
+docker-compose up --build
+```
+
+起動後の確認:
+- **フロントエンド** (Material UI 使用): `http://localhost:5173`
+- **バックエンド API**: `http://localhost:8080/api/hello`
+- **ユーザー一覧 API**: `http://localhost:8080/api/users`
+
+## アプリの再起動
+
+### フロント・バックを個別に起動している場合
+
+**フロントエンドを再起動:**
+```bash
+# ターミナル1: フロントエンドを停止（Ctrl+C）して再起動
+cd frontend
+npm run dev
+```
+
+**バックエンドを再起動:**
+```bash
+# ターミナル2: バックエンドを停止（Ctrl+C）して再起動
 cd backend
 mvn spring-boot:run
 ```
 
-Frontend only:
+### Docker Compose で起動している場合
 
 ```bash
-cd frontend
-npm install
-npm run dev
+# 全サービスを停止
+docker-compose down
+
+# 再度起動（ビルドも実行）
+docker-compose up --build
 ```
 
-Full local development (backend + frontend + MySQL):
+**または、コンテナのみリスタート:**
+```bash
+docker-compose restart
+```
+
+## 開発用 Docker
+
+この構成では、ソースをコンテナにマウントして開発サーバーを動かします。変更が速く反映されるように設計されています。
 
 ```bash
 docker-compose up --build
 ```
 
-Docker (開発向け)
+- **フロントエンド** (Material UI): http://localhost:5173
+- **バックエンド**: http://localhost:8080/api/hello
 
-以下はソースをマウントしてコンテナ上で開発サーバーを動かす構成です（高速な再起動・変更反映を優先）。
+## データベース（MySQL）
 
-```bash
-docker-compose up --build
-```
+`docker-compose.yml` には MySQL サービスが含まれています。起動後、データベース `ryodb` が作成され、バックエンド起動時にサンプルデータとして `Alice` と `Bob` が挿入されます。
 
-- フロントエンド: http://localhost:5173
-- バックエンド: http://localhost:8080/api/hello
+### API エンドポイント
 
+- **`GET /api/hello`** - メッセージを返す
+- **`GET /api/users`** - 全ユーザーを取得
+- **`GET /api/users?search=<name>`** - ユーザー名で検索（部分一致、大文字小文字を区別しない）
 
-データベース（MySQL）
-
-開発用 `docker-compose.yml` は MySQL サービスを含んでいます。起動するとデータベースが `ryodb` に作成され、初回起動時にバックエンドがサンプルデータ（`Alice`, `Bob`）を挿入します。
-
-起動後の確認例:
+### 起動後の確認例:
 
 ```bash
 # コンテナを起動
 docker-compose up --build
 
-# バックエンドが起動したら（ログ確認）
+# バックエンドが起動したらログを確認
 docker compose logs -f backend
 
 # API でユーザー一覧を取得
 curl http://localhost:8080/api/users
+
+# ユーザー名で検索
+curl http://localhost:8080/api/users?search=Alice
 ```
 
-プロダクションイメージを作る場合はバックエンドの `Dockerfile` を使ってビルドします。
+## プロダクションイメージ
 
+バックエンドのプロダクションイメージを作成するには、`backend/Dockerfile` を使用してください。
 
-CI / GitHub Actions
+## CI / GitHub Actions
 
-このリポジトリには GitHub Actions のワークフローが含まれており、プルリクエストやプッシュ時にバックエンド（Maven）とフロントエンド（npm）のビルド、ならびに Docker イメージのビルドを自動で実行します。`main` ブランチへのプッシュでは設定に応じて GitHub Container Registry (ghcr.io) へイメージをプッシュします。
+このリポジトリには GitHub Actions のワークフローが含まれており、プルリクエストやプッシュ時にバックエンド（Maven）とフロントエンド（npm）のビルド、および Docker イメージのビルドを自動実行します。`main` ブランチへのプッシュでは、設定に応じて GitHub Container Registry (`ghcr.io`) へイメージをプッシュします。
 
 - ワークフローの確認: [.github/workflows/ci-build.yml](.github/workflows/ci-build.yml)
 
-Publishing images to GitHub Container Registry (ghcr.io)
+### ghcr.io へのイメージ公開
 
-1. GitHub Actions を使う場合
+#### GitHub Actions を使う場合
 
-- デフォルトではワークフローは `GITHUB_TOKEN` を使ってイメージをビルド・プッシュします。リポジトリのワークフロー内で `permissions: packages: write` が必要な場合があります。ワークフローは既にこのリポジトリ内にあるため、多くのケースでは追加のシークレットは不要です。
+- デフォルトではワークフローが `GITHUB_TOKEN` を使用してイメージをビルドおよびプッシュします。
+- リポジトリのワークフローで `permissions: packages: write` が必要になる場合があります。
+- ほとんどの場合、追加のシークレットは不要です。
 
-2. 手動でローカルからプッシュする場合 (必要なとき)
+#### ローカルから手動でプッシュする場合（必要なとき）
 
- - Personal Access Token (PAT) を作成し、`write:packages`（および必要なら `repo`）スコープを付与します。
- - PAT を `CR_PAT` のような名前で GitHub のリポジトリシークレットに保存するか、ローカルで利用します。
+1. GitHub の Personal Access Token (PAT) を作成し、`write:packages` と必要に応じて `repo` スコープを付与します。
+2. PAT を `CR_PAT` などの環境変数または GitHub シークレットとして保存します。
 
- 例 (ローカルでの手順):
+例:
 
 ```bash
 echo $CR_PAT | docker login ghcr.io -u ryoisbn4c0193-hue --password-stdin
@@ -101,46 +141,28 @@ docker build -t ghcr.io/ryoisbn4c0193-hue/ryoproject-backend:latest ./backend
 docker push ghcr.io/ryoisbn4c0193-hue/ryoproject-backend:latest
 ```
 
-3. 注意点
+#### 注意点
 
-- ghcr にプッシュする場合、リポジトリや組織のパッケージ設定で `Read and write` の権限や、`GITHUB_TOKEN` でのパブリッシュを許可しているか確認してください。
-- ワークフローで自動プッシュを有効にする際は、タグ付けルール（例: `v*` タグでのみパブリッシュ）やブランチ保護を検討してください。
+- ghcr にプッシュする場合、リポジトリや組織のパッケージ設定で `Read and write` 権限が有効か確認してください。
+- 自動プッシュを有効にする場合は、タグ付けルール（例: `v*` タグのみ）やブランチ保護の運用を検討してください。
 
-必要なら、この README の説明にあなたの GitHub ユーザー名 / リポジトリ名を埋め込んだ具体例を追加します。どの方式で公開したいか教えてください。
+## Docker デーモン TCP 接続のセキュリティ
 
-具体例: ghcr へイメージをプッシュする（置換してください）
+このリポジトリでは、devcontainer からホストの Docker デーモンに接続するために `DOCKER_HOST=tcp://host.docker.internal:2375` を使用する運用を案内しています。TCP を有効化すると通信が暗号化されないため、以下に注意してください。
 
-以下はローカルでイメージをビルドして `ghcr.io` にプッシュする具体例です。`YOUR_GITHUB_USERNAME` と `OWNER/REPO` を実際の値に置き換えてください。CI では `GITHUB_TOKEN` が代わりに使われます。
+- 常時有効化は避け、必要なときだけ有効にしてください。
+- 作業が終わったら無効化してください。
+- 代替として、Docker ソケットのマウントや `docker context` の `ssh` を検討するとより安全です。
 
-```bash
-# ログイン（PAT を利用する場合）
-echo $CR_PAT | docker login ghcr.io -u ryoisbn4c0193-hue --password-stdin
-
-# バックエンドのイメージをビルドしてプッシュ
-docker build -t ghcr.io/ryoisbn4c0193-hue/ryoproject-backend:latest ./backend
-docker push ghcr.io/ryoisbn4c0193-hue/ryoproject-backend:latest
-
-# フロントエンド（静的ビルドや別名でビルドする場合）
-docker build -t ghcr.io/ryoisbn4c0193-hue/ryoproject-frontend:latest ./frontend
-docker push ghcr.io/ryoisbn4c0193-hue/ryoproject-frontend:latest
-```
-
-Docker デーモンの TCP (host.docker.internal:2375) を一時的に有効にする運用 — セキュリティ注意
-
-このリポジトリの開発フローでは、devcontainer からホストの Docker デーモンに接続するために `DOCKER_HOST=tcp://host.docker.internal:2375` を使う運用を案内しています。TCP を有効化すると通信が暗号化されずにローカルネットワーク上で公開されるため、以下の点に注意してください。
-
-- 推奨: 常時有効化は避け、必要なときだけ一時的に有効にしてください。作業が終わったら必ず無効化しましょう。
-- 代替案: Docker ソケットを devcontainer にマウントする、または `docker context` の `ssh` を利用する（より安全）を検討してください。
-
-Docker Desktop での一時有効化（Windows / macOS）:
+### Docker Desktop での一時有効化（Windows / macOS）
 
 1. Docker Desktop を開く
-2. `Settings` / `Preferences` -> `General` を開く
-3. `Expose daemon on tcp://localhost:2375 without TLS` をチェックして適用
+2. `Settings` / `Preferences` の `General` を開く
+3. `Expose daemon on tcp://localhost:2375 without TLS` を有効化して適用
 
-有効化後、devcontainer や端末から以下を設定して接続できます。
+### 有効化後の接続設定
 
-Bash (Linux / devcontainer)
+#### Bash (Linux / devcontainer)
 
 ```bash
 export DOCKER_HOST=tcp://host.docker.internal:2375
@@ -152,7 +174,7 @@ docker ps
 unset DOCKER_HOST
 ```
 
-PowerShell (Windows)
+#### PowerShell (Windows)
 
 ```powershell
 $env:DOCKER_HOST = 'tcp://host.docker.internal:2375'
@@ -163,11 +185,10 @@ docker compose version
 Remove-Item Env:\DOCKER_HOST
 ```
 
-重要な注意事項:
+### セキュリティ注意
 
-- `tcp://...:2375` は TLS を使っていないため、ネットワーク上で盗聴や改ざんされるリスクがあります。信頼できないネットワークでは絶対に有効化しないでください。
-- CI や自動化でホストへ接続する必要がある場合は、SSH ベースの `docker context` や、組織内の安全なビルドランナーを使うことを検討してください。
-
-必要なら私の方で `README.md` の該当箇所にあなたの GitHub ユーザー名/リポジトリ名を埋めた具体例を入れます。差し替える値を教えてください。
+- `tcp://...:2375` は TLS を使用していないため、盗聴や改ざんのリスクがあります。
+- 信頼できないネットワークでは絶対に有効化しないでください。
+- CI や自動化でホスト接続が必要な場合は、SSH ベースの `docker context` や安全なビルドランナーの利用を検討してください。
 
 
