@@ -9,7 +9,7 @@ export default defineConfig({
     allowedHosts: ['host.docker.internal', 'localhost'],
     proxy: {
       '/api': {
-        target: 'http://host.docker.internal:8080',
+        target: 'http://backend:8080',
         changeOrigin: true,
         secure: false
       }
