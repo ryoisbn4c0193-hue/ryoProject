@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ryoProject.mapper.UserMapper">
+
+    <select id="selectById" parameterType="long" resultType="com.ryoProject.dto.User">
+        SELECT id, name, email
+        FROM users
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="com.ryoProject.dto.User">
+        SELECT id, name, email
+        FROM users
+    </select>
+
+        <select id="selectUsersByName" parameterType="String" resultType="com.ryoProject.dto.User">
+        SELECT id, name, email
+        FROM users
+        WHERE name = #{name}
+    </select>
+
+</mapper>

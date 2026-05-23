@@ -19,6 +19,8 @@ import Paper from '@mui/material/Paper'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 
+const apiBase = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'
+
 export default function App() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -33,7 +35,7 @@ export default function App() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch('/api/hello')
+      const response = await fetch(`${apiBase}/api/hello`)
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
       }
@@ -51,7 +53,7 @@ export default function App() {
     setUserLoading(true)
     setError(null)
     try {
-      const response = await fetch('/api/users')
+      const response = await fetch(`${apiBase}/api/users`)
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
       }
@@ -127,7 +129,7 @@ export default function App() {
               <Button
                 variant="outlined"
                 component="a"
-                href="/api/hello"
+                href={`${apiBase}/api/hello`}
                 target="_blank"
                 rel="noreferrer"
               >

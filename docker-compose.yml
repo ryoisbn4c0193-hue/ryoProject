@@ -3,6 +3,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
+    depends_on:
+      - db
     volumes:
       - ./backend:/workspace
       - ~/.m2:/root/.m2
@@ -10,11 +12,15 @@ services:
       - "8080:8080"
     environment:
       - MAVEN_OPTS=-Xmx512m
+    networks:
+      - appnet
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    depends_on:
+      - backend
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -22,7 +28,11 @@ services:
       - "5173:5173"
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - VITE_BACKEND_URL=http://localhost:8080
     command: ["npm","run","dev","--","--host","0.0.0.0"]
+    networks:
+      - appnet
+
   db:
     image: mysql:8.0
     restart: unless-stopped
@@ -40,6 +50,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - appnet
 
 volumes:
   db-data:
+
+networks:
+  appnet:
+    driver: bridge

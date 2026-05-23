@@ -1,7 +1,10 @@
 FROM maven:3.9.4-eclipse-temurin-17
 WORKDIR /workspace
 COPY pom.xml ./
+COPY wait-for-db.sh /wait-for-db.sh
+RUN chmod +x /wait-for-db.sh
+RUN apt-get update && apt-get install -y default-mysql-client && rm -rf /var/lib/apt/lists/*
 RUN mvn -q -DskipTests dependency:go-offline
 VOLUME ["/workspace"]
 EXPOSE 8080
-CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-Dspring.output.ansi.enabled=never"]
+CMD ["bash", "-c", "/wait-for-db.sh db 3306 mvn spring-boot:run -Dspring-boot.run.jvmArguments=-Dspring.output.ansi.enabled=never"]
